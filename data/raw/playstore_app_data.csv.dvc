@@ -1,0 +1,5 @@
+outs:
+- md5: 90d8f17a563174e5edf8e4e90c4010e5
+  size: 51269
+  hash: md5
+  path: playstore_app_data.csv

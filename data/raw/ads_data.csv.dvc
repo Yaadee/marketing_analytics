@@ -1,0 +1,5 @@
+outs:
+- md5: b870c8682cbf242e710dfc22875e457f
+  size: 10208
+  hash: md5
+  path: ads_data.csv

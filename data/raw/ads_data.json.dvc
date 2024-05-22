@@ -1,0 +1,5 @@
+outs:
+- md5: 70994281a4623e948ba94bb4b6a0c9c4
+  size: 23571
+  hash: md5
+  path: ads_data.json
