@@ -1,0 +1,5 @@
+outs:
+- md5: 644048befba1af42821c1d20effbd6bc
+  size: 52747
+  hash: md5
+  path: playstore_reviews.csv

@@ -1,0 +1,11 @@
+# # Use the official Redash Docker image
+# FROM redash/redash:latest
+
+# # Set the working directory
+# WORKDIR /app
+
+# # Copy the setup script into the container
+# COPY setup.sh /app
+
+# # Run the setup script
+# RUN chmod +x setup.sh && ./setup.sh

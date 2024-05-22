@@ -32,7 +32,7 @@ database_url = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_na
 # Migrate CSV files to PostgreSQL with corresponding table names
 csv_files = [
     ('telegram_channel_info.csv', 'telegram_subscriptions'),
-    ('playstore_app_data.csv', 'playstore_reviews'),
+    ('playstore_reviews.csv', 'playstore_reviews'),
     ('bank_ads.csv', 'bank_advertisements')
 ]
 

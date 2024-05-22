@@ -1,5 +1,6 @@
-import asyncio
+#   import asyncio
 import os
+import asyncio
 import pandas as pd
 from datetime import datetime, timedelta
 from telethon import TelegramClient
@@ -76,10 +77,10 @@ async def main():
     if daily_data:
         daily_df = pd.DataFrame(daily_data)
         save_to_csv(daily_df, 'data/raw/telegram_channel_info.csv')
-        insert_subscription_data(engine, daily_df, 'telegram_channel_info.csv')
+        insert_subscription_data(engine, daily_df, 'telegram_channel_info')
     
     # Close database connection
     close_connection(engine)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.get_event_loop().run_until_complete(main())

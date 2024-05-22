@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 import matplotlib.pyplot as plt
 import seaborn as sns
-from db_connection import get_database_engine
+from scripts.db_connection import get_database_engine
 import logging
 
 # Configure logging
