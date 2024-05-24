@@ -1,0 +1,19 @@
+raw_telegram_data:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/bank_ads.csv
+
+raw_google_play_reviews:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/playstore_reviews.csv
+
+raw_google_play_downloads:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/google_play_downloads.csv
+
+raw_telegram_subscription_growth:
+  type: pandas.CSVDataSet
+  filepath: data/01_raw/daily_telegram_subscriptions.csv
+
+intermediate_data:
+  type: pandas.CSVDataSet
+  filepath: data/02_intermediate/intermediate_data.csv

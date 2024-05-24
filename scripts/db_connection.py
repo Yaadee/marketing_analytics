@@ -1,4 +1,3 @@
-# db_connection.py
 from sqlalchemy import create_engine, text
 
 def get_database_engine(db_name, db_user, db_password, db_host, db_port):
@@ -8,17 +7,12 @@ def get_database_engine(db_name, db_user, db_password, db_host, db_port):
     engine = create_engine(db_url)
     return engine
 
-def insert_ads_data(conn, ads_data):
+def insert_subscription_data(conn, data, table_name):
     try:
-        for ad in ads_data:
-            conn.execute(text("""
-                INSERT INTO bank_advertisements (date, post_link, view, post_hour)
-                VALUES (:date, :post_link, :view, :post_hour)
-            """), ad)
-        conn.commit()
-        print("Successfully inserted data into PostgreSQL database.")
+        data.to_sql(table_name, conn, if_exists='append', index=False)
+        print(f"Data inserted successfully into the PostgreSQL table {table_name}")
     except Exception as e:
-        print(f"Error occurred while inserting data into PostgreSQL database: {e}")
+        print(f"Error occurred while inserting data into PostgreSQL: {e}")
 
 def close_connection(conn):
     try:

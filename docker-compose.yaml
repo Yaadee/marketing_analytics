@@ -1,11 +1,46 @@
-# # Use the official Redash Docker image
-# FROM redash/redash:latest
+version: '3.8'
 
-# # Set the working directory
-# WORKDIR /app
+services:
+  metabase:
+    image: metabase/metabase
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_TYPE: h2
+      MB_DB_FILE: /metabase-data/metabase.db
+    volumes:
+      - metabase-data:/metabase-data
 
-# # Copy the setup script into the container
-# COPY setup.sh /app
+  superset:
+    image: apache/superset
+    ports:
+      - "8088:8088"
+    environment:
+      SUPERSET_SECRET_KEY: 'your_secret_key'
+    volumes:
+      - superset-data:/var/lib/superset
 
-# # Run the setup script
-# RUN chmod +x setup.sh && ./setup.sh
+  redash:
+    image: redash/redash:latest
+    ports:
+      - "5000:5000"
+    environment:
+      REDASH_REDIS_URL: redis://redis:6379/0
+      REDASH_DATABASE_URL: postgres://postgres:password@postgres/postgres
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+
+  redis:
+    image: redis:6-alpine
+
+volumes:
+  metabase-data:
+  superset-data:

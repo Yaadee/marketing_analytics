@@ -95,6 +95,15 @@ if app_info and filtered_reviews:
     print("Data saved successfully.")
 else:
     print("No data to save.")
+
+
+'''
+This script is to count the install count 
+
+
+'''
+
+
 import pandas as pd
 from sqlalchemy import create_engine
 from google_play_scraper import app, reviews_all

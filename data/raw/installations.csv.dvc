@@ -1,0 +1,5 @@
+outs:
+- md5: 7ee4a03f83d67192fa57d16731426f62
+  size: 51344
+  hash: md5
+  path: installations.csv
