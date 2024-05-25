@@ -1,4 +1,4 @@
-# src/pipelines/data_engineering/nodes.py
+# src/kedro_project/pipelines/data_engineering/nodes.py
 
 import pandas as pd
 from sqlalchemy import create_engine

@@ -1,4 +1,4 @@
-# src/pipelines/data_engineering/pipeline.py
+# src/kedro_project/pipelines/data_engineering/pipeline.py
 
 from kedro.pipeline import Pipeline, node
 from .nodes import load_to_postgresql
