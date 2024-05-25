@@ -1,95 +1,224 @@
 import pandas as pd
-from sqlalchemy import create_engine, text
+from textblob import TextBlob
+import psycopg2
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scripts.db_connection import get_database_engine
-import logging
+from statsmodels.tsa.seasonal import seasonal_decompose
+import os
 
-# Configure logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Function to perform sentiment analysis using TextBlob
+def get_sentiment(text):
+    blob = TextBlob(text)
+    polarity = blob.sentiment.polarity
+    if polarity > 0:
+        return 'positive'
+    elif polarity < 0:
+        return 'negative'
+    else:
+        return 'neutral'
 
-# Function to load data from PostgreSQL
-def load_data(engine):
-    try:
-        playstore_query = "SELECT * FROM playtore_reviews"
-        ads_query = "SELECT * FROM bank_advertisements"
-        
-        playstore_reviews = pd.read_sql(playstore_query, engine)
-        bank_ads = pd.read_sql(ads_query, engine)
-        
-        return playstore_reviews, bank_ads   
-    except Exception as e:
-        logger.error(f"Error occurred while loading data from PostgreSQL: {e}")
-        return None, None
+# Function to extract keywords from text using TextBlob
+def extract_keywords(text):
+    blob = TextBlob(text)
+    keywords = blob.noun_phrases
+    keywords_str = ', '.join(keywords)
+    return keywords_str
 
+# Function to generate insights based on sentiment
+def generate_insight(sentiment):
+    if sentiment == 'positive':
+        return 'Positive feedback received.'
+    elif sentiment == 'negative':
+        return 'Negative feedback identified.'
+    else:
+        return 'Neutral sentiment observed.'
 
-# Function to preprocess the data
-def preprocess_data(playstore_reviews, bank_ads):
-    logger.info("Playstore Reviews Columns: " + ", ".join(playstore_reviews.columns))
-    logger.info("Bank Ads Columns: " + ", ".join(bank_ads.columns))
-    
-    # Convert columns to datetime
-    playstore_reviews['at'] = pd.to_datetime(playstore_reviews['at'])
-    bank_ads['date'] = pd.to_datetime(bank_ads['date'])
+# Database connection parameters
+db_config = {
+    'dbname': 'tickvah_banks_ads',
+    'user': 'postgres',
+    'password': 'admin',
+    'host': 'localhost',
+    'port': '5432'
+}
 
-    return playstore_reviews, bank_ads
+# Create a connection to the PostgreSQL database
+conn = psycopg2.connect(
+    dbname=db_config['dbname'],
+    user=db_config['user'],
+    password=db_config['password'],
+    host=db_config['host'],
+    port=db_config['port']
+)
 
-# Function to analyze the impact of ads
-def analyze_impact(playstore_reviews, bank_ads):
-    results = []
-    for _, ad in bank_ads.iterrows():
-        ad_date = ad['Date']
-        pre_ad_reviews = playstore_reviews[playstore_reviews['at'] < ad_date]
-        post_ad_reviews = playstore_reviews[playstore_reviews['at'] >= ad_date]
+# Create a cursor object using the connection
+cur = conn.cursor()
 
-        pre_ad_count = pre_ad_reviews.shape[0]
-        post_ad_count = post_ad_reviews.shape[0]
-        
-        pre_ad_avg_rating = pre_ad_reviews['score'].mean()
-        post_ad_avg_rating = post_ad_reviews['score'].mean()
+# Example queries to load data from tables
+queries = [
+    "SELECT * FROM bank_advertisements",
+    "SELECT * FROM daily_install_count",
+    "SELECT * FROM telegram_subscriptions",
+    "SELECT * FROM playstore_reviews_info",
+    "SELECT * FROM real_install_count"
+]
 
-        results.append({
-            'ad_date': ad_date,
-            'pre_ad_count': pre_ad_count,
-            'post_ad_count': post_ad_count,
-            'pre_ad_avg_rating': pre_ad_avg_rating,
-            'post_ad_avg_rating': post_ad_avg_rating
-        })
+# Empty list to hold DataFrames
+dfs = []
 
-    return pd.DataFrame(results)
+# Execute the queries and fetch all results for each table
+for query in queries:
+    cur.execute(query)
+    data = cur.fetchall()
+    column_names = [desc[0] for desc in cur.description]
+    df = pd.DataFrame(data, columns=column_names)
+    dfs.append(df)
 
+# Close cursor and connection
+cur.close()
+conn.close()
 
-# Function to visualize the results
-def visualize_results(results):
-    plt.figure(figsize=(14, 7))
-    
-    # Plotting number of reviews before and after each ad
-    plt.subplot(1, 2, 1)
-    sns.barplot(x='ad_date', y='pre_ad_count', data=results, color='blue', label='Before Ad')
-    sns.barplot(x='ad_date', y='post_ad_count', data=results, color='red', label='After Ad')
-    plt.xlabel('Ad Date')
-    plt.ylabel('Number of Reviews')
-    plt.title('Number of Reviews Before and After Ads')
-    plt.legend()
+# Now you have separate DataFrames for each table
+tickvah_ads = dfs[0]
+App_install = dfs[1]
+telegramsubscription = dfs[2]
+playstorereviews = dfs[3]
+real_install = dfs[4]
 
-    # Plotting average rating before and after each ad
-    plt.subplot(1, 2, 2)
-    sns.barplot(x='ad_date', y='pre_ad_avg_rating', data=results, color='blue', label='Before Ad')
-    sns.barplot(x='ad_date', y='post_ad_avg_rating', data=results, color='red', label='After Ad')
-    plt.xlabel('Ad Date')
-    plt.ylabel('Average Rating')
-    plt.title('Average Rating Before and After Ads')
-    plt.legend()
+# Apply keyword extraction and sentiment analysis functions to 'content' column
+playstorereviews['keywords'] = playstorereviews['content'].apply(extract_keywords)
+playstorereviews['sentiment'] = playstorereviews['content'].apply(get_sentiment)
 
-    plt.tight_layout()
-    plt.show()
+# Generate insights based on sentiment
+playstorereviews['insight'] = playstorereviews['sentiment'].apply(generate_insight)
 
-if __name__ == '__main__':
-    engine = get_database_engine(db_name='tickvah_banks_ads', db_user='postgres', db_password='admin', db_host='localhost', db_port='5432')
-    playstore_reviews, bank_ads = load_data(engine)
-    
-    if playstore_reviews is not None and bank_ads is not None:
-        playstore_reviews, bank_ads = preprocess_data(playstore_reviews, bank_ads)
-        results = analyze_impact(playstore_reviews, bank_ads)
-        visualize_results(results)
+# Re-establish connection to the PostgreSQL database to update the table
+conn = psycopg2.connect(
+    dbname=db_config['dbname'],
+    user=db_config['user'],
+    password=db_config['password'],
+    host=db_config['host'],
+    port=db_config['port']
+)
+
+# Create a cursor object using the connection
+cur = conn.cursor()
+
+# Update the table with sentiment, keywords, and insight information
+update_query = """
+    UPDATE playstore_reviews_info
+    SET sentiment = %s, keywords = %s, insight = %s
+    WHERE "reviewId" = %s
+"""
+
+for index, row in playstorereviews.iterrows():
+    sentiment = row['sentiment']
+    keywords = row['keywords']
+    insight = row['insight']
+    reviewId = row['reviewId']
+    cur.execute(update_query, (sentiment, keywords, insight, reviewId))
+
+# Commit the transaction
+conn.commit()
+
+# Close the cursor and connection
+cur.close()
+conn.close()
+
+# Save processed data to CSV
+data_processed_dir = 'data/processed'
+if not os.path.exists(data_processed_dir):
+    os.makedirs(data_processed_dir)
+
+tickvah_ads.to_csv(os.path.join(data_processed_dir, 'tickvah_ads_processed.csv'), index=False)
+App_install.to_csv(os.path.join(data_processed_dir, 'App_install_processed.csv'), index=False)
+telegramsubscription.to_csv(os.path.join(data_processed_dir, 'telegramsubscription_processed.csv'), index=False)
+playstorereviews.to_csv(os.path.join(data_processed_dir, 'playstorereviews_processed.csv'), index=False)
+real_install.to_csv(os.path.join(data_processed_dir, 'real_install_processed.csv'), index=False)
+
+# Convert the date columns to datetime
+tickvah_ads['date'] = pd.to_datetime(tickvah_ads['date'])
+App_install['date'] = pd.to_datetime(App_install['date'])
+telegramsubscription['date'] = pd.to_datetime(telegramsubscription['date'])
+playstorereviews['at'] = pd.to_datetime(playstorereviews['at'])
+
+# Aggregate the sentiment data to a daily level
+daily_sentiment = playstorereviews.groupby([playstorereviews['at'].dt.date, 'sentiment']).size().unstack(fill_value=0)
+
+# Reset the index and rename the columns
+daily_sentiment.index = pd.to_datetime(daily_sentiment.index)
+daily_sentiment = daily_sentiment.rename_axis('date').reset_index()
+
+# Merge all DataFrames on the 'date' column
+merged_df = pd.merge(tickvah_ads, App_install, on='date', how='outer')
+merged_df = pd.merge(merged_df, telegramsubscription, on='date', how='outer')
+merged_df = pd.merge(merged_df, daily_sentiment, on='date', how='outer')
+
+# Fill missing values with 0 for sentiment columns
+sentiment_cols = ['positive', 'negative', 'neutral']
+for col in sentiment_cols:
+    if col not in merged_df:
+        merged_df[col] = 0
+
+merged_df[sentiment_cols] = merged_df[sentiment_cols].fillna(0)
+
+# Visualization
+
+# Plot install count over time
+plt.figure(figsize=(14, 7))
+sns.lineplot(data=merged_df, x='date', y='install_count', label='Install Count')
+plt.title('Daily Install Count Over Time')
+plt.xlabel('Date')
+plt.ylabel('Install Count')
+plt.legend()
+plt.show()
+
+# Plot subscriber count over time
+plt.figure(figsize=(14, 7))
+sns.lineplot(data=merged_df, x='date', y='subscribers', label='Subscribers')
+plt.title('Subscribers Over Time')
+plt.xlabel('Date')
+plt.ylabel('Subscribers')
+plt.legend()
+plt.show()
+
+# Plot sentiment over time
+plt.figure(figsize=(14, 7))
+sns.lineplot(data=merged_df, x='date', y='positive', label='Positive Sentiment')
+sns.lineplot(data=merged_df, x='date', y='negative', label='Negative Sentiment')
+sns.lineplot(data=merged_df, x='date', y='neutral', label='Neutral Sentiment')
+plt.title('Daily Sentiment Over Time')
+plt.xlabel('Date')
+plt.ylabel('Sentiment Count')
+plt.legend()
+plt.show()
+
+# Correlation Analysis
+
+# Calculate the correlation matrix
+correlation_matrix = merged_df[['install_count', 'subscribers'] + sentiment_cols].corr()
+
+# Plot the correlation matrix
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Matrix')
+plt.show()
+
+# Time Series Decomposition for Install Count
+decomposition = seasonal_decompose(merged_df.set_index('date')['install_count'].fillna(0), model='additive', period=30)
+
+plt.figure(figsize=(14, 10))
+plt.subplot(411)
+plt.plot(decomposition.observed, label='Observed')
+plt.legend(loc='upper left')
+plt.subplot(412)
+plt.plot(decomposition.trend, label='Trend')
+plt.legend(loc='upper left')
+plt.subplot(413)
+plt.plot(decomposition.seasonal, label='Seasonal')
+plt.legend(loc='upper left')
+plt.subplot(414)
+plt.plot(decomposition.resid, label='Residual')
+plt.legend(loc='upper left')
+plt.tight_layout()
+plt.show()

@@ -1,7 +1,21 @@
 #!/bin/bash
 
-echo "Setting up dashboard environment..."
+# Ensure you have Python installed and the necessary dependencies
 
-docker-compose up -d
+# Execute db_connection.py
+python db_connection.py
 
-echo "Dashboard setup complete. Metabase on port 3000, Superset on port 8088, Redash on port 5000."
+# Execute scrap_tickvah_ads.py
+python scrap_tickvah_ads.py
+
+# Execute fetch_playstore_data.py
+python fetch_playstore_data.py
+
+# Execute fetch_telegram_data.py
+python fetch_telegram_data.py
+
+# Execute migrate_database.py
+python migrate_database.py
+
+# Execute process_data.py (analysis and visualization)
+python process_data.py

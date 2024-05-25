@@ -1,0 +1,5 @@
+outs:
+- md5: e5be3393590b85bce63d42c714eb48c5
+  size: 338
+  hash: md5
+  path: App_install_processed.csv

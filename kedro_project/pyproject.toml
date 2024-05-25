@@ -6,7 +6,7 @@ authors = ["Yadasa Tarafa <yadasat437@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-kedro = "^0.17.0"
+kedro = "^0.19.5"
 sqlalchemy = "^1.3.23"
 pandas = "^1.2.0"
 psycopg2-binary = "^2.8.6"
@@ -16,6 +16,7 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
 [tool.kedro]
-project_name = "kedro_project"
-project_version = "0.1.0"
 package_name = "kedro_project"
+project_name = "kedro_project"
+kedro_init_version = "0.19.5"
+source_dir = "src"

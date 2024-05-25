@@ -1,6 +1,6 @@
 # src/kedro_project/settings.py
 
-from kedro.config import TemplatedConfigLoader, ConfigLoader
+from kedro.io import ConfigLoader
 
 CONF_SOURCE = "conf"
 CONFIG_LOADER_CLASS = ConfigLoader

@@ -1,0 +1,5 @@
+outs:
+- md5: 67e4145e96fa1f8f03f1c8f540fe4025
+  size: 77250
+  hash: md5
+  path: tickvah_ads_processed.csv
