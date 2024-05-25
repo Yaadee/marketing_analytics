@@ -1,3 +1,5 @@
+# catalog.yml
+
 raw_telegram_data:
   type: pandas.CSVDataSet
   filepath: data/01_raw/bank_ads.csv
@@ -17,3 +19,23 @@ raw_telegram_subscription_growth:
 intermediate_data:
   type: pandas.CSVDataSet
   filepath: data/02_intermediate/intermediate_data.csv
+
+postgresql_ads:
+  type: pandas.SQLTableDataSet
+  table_name: raw_telegram_data
+  credentials: postgresql
+
+postgresql_reviews:
+  type: pandas.SQLTableDataSet
+  table_name: playstore_reviews
+  credentials: postgresql
+
+postgresql_downloads:
+  type: pandas.SQLTableDataSet
+  table_name: google_play_downloads
+  credentials: postgresql
+
+postgresql_subscription_growth:
+  type: pandas.SQLTableDataSet
+  table_name: telegram_subscription_growth
+  credentials: postgresql

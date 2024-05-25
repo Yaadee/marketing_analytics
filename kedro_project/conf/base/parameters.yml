@@ -1,0 +1,11 @@
+# conf/base/parameters.yml
+
+table_names:
+  raw_telegram_data: raw_telegram_data
+  playstore_reviews: playstore_reviews
+  google_play_downloads: google_play_downloads
+  telegram_subscription_growth: telegram_subscription_growth
+
+credentials:
+  postgresql:
+    con: postgresql://postgres:admin@localhost:5432/tickvah_banks_ads

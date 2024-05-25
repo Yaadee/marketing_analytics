@@ -1,28 +1,34 @@
-from kedro.pipeline import Pipeline, node, pipeline
+# src/pipelines/data_engineering/pipeline.py
 
-from .nodes import create_model_input_table, preprocess_companies, preprocess_shuttles
-
+from kedro.pipeline import Pipeline, node
+from .nodes import load_to_postgresql
 
 def create_pipeline(**kwargs) -> Pipeline:
-    return pipeline(
+    return Pipeline(
         [
             node(
-                func=preprocess_companies,
-                inputs="companies",
-                outputs="preprocessed_companies",
-                name="preprocess_companies_node",
+                func=load_to_postgresql,
+                inputs=["raw_telegram_data", "params:table_names.raw_telegram_data", "credentials.postgresql"],
+                outputs=None,
+                name="load_raw_telegram_data_to_postgresql"
             ),
             node(
-                func=preprocess_shuttles,
-                inputs="shuttles",
-                outputs="preprocessed_shuttles",
-                name="preprocess_shuttles_node",
+                func=load_to_postgresql,
+                inputs=["raw_google_play_reviews", "params:table_names.playstore_reviews", "credentials.postgresql"],
+                outputs=None,
+                name="load_raw_google_play_reviews_to_postgresql"
             ),
             node(
-                func=create_model_input_table,
-                inputs=["preprocessed_shuttles", "preprocessed_companies", "reviews"],
-                outputs="model_input_table",
-                name="create_model_input_table_node",
+                func=load_to_postgresql,
+                inputs=["raw_google_play_downloads", "params:table_names.google_play_downloads", "credentials.postgresql"],
+                outputs=None,
+                name="load_raw_google_play_downloads_to_postgresql"
             ),
+            node(
+                func=load_to_postgresql,
+                inputs=["raw_telegram_subscription_growth", "params:table_names.telegram_subscription_growth", "credentials.postgresql"],
+                outputs=None,
+                name="load_raw_telegram_subscription_growth_to_postgresql"
+            )
         ]
     )
